@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { translations } from '../locales';
 import { supabase } from '@/lib/supabase'; // Importación de tu cliente de Supabase
 
 interface RegisterFormProps {
@@ -10,8 +9,7 @@ interface RegisterFormProps {
 }
 
 export default function RegisterForm({ onSuccess }: RegisterFormProps) {
-  const { language } = useLanguage();
-  const t = translations[language] || translations.es;
+  const { t } = useLanguage();
 
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -34,7 +32,7 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
     setErrorMessage(null);
 
     try {
-      // Preparamos el objeto excluyendo campos que no van a la base de datos (como gdpr_accepted si no existe la columna)
+      // El esquema del proyecto no declara una columna de consentimiento, así que se omite del insert.
       const payload = {
         room_number: null, // Viene vacío porque lo asigna el admin después
         booking_reference: null, // Si no pides referencia en el cliente, se manda como null
@@ -48,7 +46,6 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
         email: formData.email,
       };
 
-      // Inserción real en Supabase
       const { error } = await supabase
         .from('checkins')
         .insert([payload]);
@@ -57,11 +54,14 @@ export default function RegisterForm({ onSuccess }: RegisterFormProps) {
         throw error;
       }
 
-      // Si todo sale bien, pasamos a la pantalla de agradecimiento
       onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error enviando registro a Supabase:', error);
-      setErrorMessage(error.message || 'Hubo un error al registrar tus datos. Inténtalo de nuevo.');
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'Hubo un error al registrar tus datos. Inténtalo de nuevo.',
+      );
     } finally {
       setLoading(false);
     }

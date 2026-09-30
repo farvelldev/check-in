@@ -1,15 +1,13 @@
 'use client';
 
 import { useLanguage } from '../context/LanguageContext';
-import { translations } from '../locales';
 
 interface ThankYouCardProps {
   onReset?: () => void;
 }
 
 export default function ThankYouCard({ onReset }: ThankYouCardProps) {
-  const { language } = useLanguage();
-  const t = translations[language] || translations.es;
+  const { t } = useLanguage();
 
   return (
     <div className="py-6 text-center space-y-5">
